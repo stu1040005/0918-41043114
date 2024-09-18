@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>剪刀石頭布</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            transition: background-color 0.5s;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+        }
+        button {
+            font-size: 50px;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            transition: transform 0.3s;
+        }
+        button:hover {
+            transform: scale(1.2);
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 24px;
+            transition: transform 0.5s, color 0.5s;
+            position: relative;
+        }
+        .win {
+            color: green;
+            animation: expand 0.5s forwards, blink 1s infinite;
+        }
+        .lose {
+            color: red;
+        }
+        .draw {
+            color: orange;
+        }
+
+        @keyframes expand {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>剪刀石頭布</h1>
+    <div class="button-container">
+        <button id="rock" title="石頭">✊</button>
+        <button id="paper" title="布">✋</button>
+        <button id="scissors" title="剪刀">✌️</button>
+    </div>
+    <div id="result"></div>
+    <div id="scoreboard">
+        <h2>分數</h2>
+        <p>玩家：<span id="playerScore">0</span></p>
+        <p>電腦：<span id="computerScore">0</span></p>
+        <p id="winner" style="font-size: 24px; color: blue;"></p>
+    </div>
+
+    <audio id="winSound" src="win.mp3"></audio>
+    <audio id="loseSound" src="lose.mp3"></audio>
+    <audio id="drawSound" src="draw.mp3"></audio>
+
+    <script>
+        const outcomes = {
+            rock: { rock: "平局", paper: "你輸了", scissors: "你贏了" },
+            paper: { rock: "你贏了", paper: "平局", scissors: "你輸了" },
+            scissors: { rock: "你輸了", paper: "你贏了", scissors: "平局" }
+        };
+
+        let playerScore = 0;
+        let computerScore = 0;
+
+        function getComputerChoice() {
+            const choices = ['rock', 'paper', 'scissors'];
+            const randomChoice = choices[Math.floor(Math.random() * choices.length)];
+            return randomChoice;
+        }
+
+        document.getElementById('rock').onclick = function() {
+            playGame('rock');
+        };
+        document.getElementById('paper').onclick = function() {
+            playGame('paper');
+        };
+        document.getElementById('scissors').onclick = function() {
+            playGame('scissors');
+        };
+
+        function playGame(playerChoice) {
+            const computerChoice = getComputerChoice();
+            const result = outcomes[playerChoice][computerChoice];
+            const resultElement = document.getElementById('result');
+            const playerScoreElement = document.getElementById('playerScore');
+            const computerScoreElement = document.getElementById('computerScore');
+            const winnerElement = document.getElementById('winner');
+
+            let displayText = `你選擇了 ${playerChoice === 'rock' ? '石頭' : playerChoice === 'paper' ? '布' : '剪刀'}，電腦選擇了 ${computerChoice === 'rock' ? '石頭' : computerChoice === 'paper' ? '布' : '剪刀'}。結果：${result}`;
+            if (result === "你贏了") {
+                displayText = `🎉 ${displayText} 🎉`;
+                playerScore++;
+                document.getElementById('winSound').play();
+            } else if (result === "你輸了") {
+                computerScore++;
+                document.getElementById('loseSound').play();
+            } else {
+                document.getElementById('drawSound').play();
+            }
+
+            resultElement.innerText = displayText;
+            playerScoreElement.innerText = playerScore;
+            computerScoreElement.innerText = computerScore;
+
+            if (playerScore === 3) {
+                winnerElement.innerText = "恭喜你！你贏得了比賽！";
+                Swal.fire({
+                    title: '恭喜你！',
+                    text: displayText,
+                    icon: 'success',
+                    confirmButtonText: '繼續'
+                });
+                setTimeout(resetGame, 1000); 
+            } else if (computerScore === 3) {
+                winnerElement.innerText = "電腦贏得了比賽！";
+                Swal.fire({
+                    title: '遺憾！',
+                    text: displayText,
+                    icon: 'error',
+                    confirmButtonText: '繼續'
+                });
+                setTimeout(resetGame, 1000); 
+                resetGame();
+            } else {
+                updateBackground(result);
+            }
+        }
+
+        function updateBackground(result) {
+            const resultElement = document.getElementById('result');
+            if (result === "你贏了") {
+                document.body.style.backgroundColor = "#e6ffe6"; // 背景色為淺綠色
+                resultElement.className = 'win';
+            } else if (result === "你輸了") {
+                document.body.style.backgroundColor = "#ffe6e6"; // 背景色為淺紅色
+                resultElement.className = 'lose';
+            } else {
+                document.body.style.backgroundColor = "#fff7e6"; // 背景色為淺橙色
+                resultElement.className = 'draw';
+            }
+        }
+
+        function resetGame() {
+            playerScore = 0;
+            computerScore = 0;
+            document.getElementById('playerScore').innerText = playerScore;
+            document.getElementById('computerScore').innerText = computerScore;
+            document.getElementById('winner').innerText = "";
+            document.getElementById('result').innerText = "";
+            document.body.style.backgroundColor = "#f0f0f0"; // 重置背景色
+        }
+    </script>
+
+</body>
+</html>
